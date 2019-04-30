@@ -28,11 +28,12 @@ Array *create_array(int capacity)
   new_array->count = 0;
 
   // Allocate memory for elements
-  new_array->elements = malloc(capacity * sizeof(char *));
-  for (int i = 0; i < new_array->capacity; i++)
-  {
-    new_array->elements[i] = NULL;
-  }
+  // new_array->elements = malloc(capacity * sizeof(char *));
+  // for (int i = 0; i < new_array->capacity; i++)
+  // {
+  //   new_array->elements[i] = NULL;
+  // }
+  new_array->elements = calloc(capacity, sizeof(char *)); // similar to above
 
   return new_array;
 }
@@ -46,7 +47,11 @@ void destroy_array(Array *arr)
   // Free all elements
   if (arr->elements != NULL)
   {
-    free(arr->elements);
+    // free(arr->elements);
+    for (int i = 0; i < arr->count; i++)
+    {
+      free(arr->elements[i]);
+    }
   }
   // Free array
   if (arr != NULL)
@@ -129,7 +134,8 @@ void arr_insert(Array *arr, char *element, int index)
     arr->elements[i] = arr->elements[i - 1];
   }
   // Copy the element and add it to the array
-  arr->elements[index] = element;
+  char *element_copy = strdup(element);
+  arr->elements[index] = element_copy;
 
   // Increment count by 1
   arr->count++;
@@ -149,8 +155,9 @@ void arr_append(Array *arr, char *element)
   }
 
   // Copy the element and add it to the end of the array
-  arr->elements[arr->count] = element;
-
+  // copy using strdup, -> works like using malloc and then strcpy
+  char *element_copy = strdup(element);
+  arr->elements[arr->count] = element_copy;
   // Increment count by 1
   arr->count++;
 }
@@ -163,13 +170,39 @@ void arr_append(Array *arr, char *element)
  *****/
 void arr_remove(Array *arr, char *element)
 {
-
   // Search for the first occurence of the element and remove it.
   // Don't forget to free its memory!
+  char *element_to_remove;
+  int removed_element_index;
+  for (int i = 0; i < arr->count; i++)
+  {
+    if (strcmp(arr->elements[i], element) == 0)
+    {
+      element_to_remove = arr->elements[i];
+      arr->elements[i] = NULL;
+      removed_element_index = i;
+    }
+  }
 
-  // Shift over every element after the removed element to the left one position
+  if (removed_element_index)
+  {
+    free(element_to_remove);
 
-  // Decrement count by 1
+    // Shift over every element after the removed element to the left one position
+    for (int i = removed_element_index; i < arr->count; i++)
+    {
+      if (i == arr->count)
+      {
+        arr->elements[i] = NULL;
+      }
+      else
+      {
+        arr->elements[i] = arr->elements[i + 1];
+      }
+    }
+    // Decrement count by 1
+    arr->count--;
+  }
 }
 
 /*****
@@ -192,7 +225,6 @@ void arr_print(Array *arr)
 #ifndef TESTING
 int main(void)
 {
-
   Array *arr = create_array(1);
 
   arr_insert(arr, "STRING1", 0);
